@@ -1,7 +1,6 @@
 # Local migration/history retained outside the monorepo
 /.local-legacy/
 /.local-repo-backups/
-/考勤分析/
 
 # OS, editors, secrets, and logs
 .DS_Store
@@ -28,7 +27,7 @@ Thumbs.db
 **/.codex-tmp/
 **/.workbuddy/
 **/.workbuddy.7z
-projects/material-code/tmp/
+物料编码/tmp/
 
 # Runtime work, outputs, and backups
 **/output/
@@ -54,4 +53,4 @@ projects/material-code/tmp/
 **/*.sqlite-*
 
 # Ad-hoc local inspection scripts
-projects/material-code/dump_range_tmp.py
+物料编码/dump_range_tmp.py

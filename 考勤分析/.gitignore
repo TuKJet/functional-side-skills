@@ -1,0 +1,11 @@
+.codex-tmp/
+.workbuddy/
+audit_work/
+outputs/
+work/
+*.xlsx
+*.xls
+*.xlsm
+agent_review_queue.json
+agent_decisions.json
+analysis.json

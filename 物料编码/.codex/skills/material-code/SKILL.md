@@ -12,7 +12,7 @@ description: 管理清力物料编码申请、候选检索与 ERP 物料库同�
 ## 安装形态
 
 不要用 `skill-installer` 把本目录安装到全局 Skill 目录。拉取仓库的
-`projects/material-code` 分项后，在该工程根目录运行：
+`物料编码` 工程后，在该工程根目录运行：
 
 ```powershell
 uv sync --locked

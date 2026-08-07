@@ -10,7 +10,7 @@ Run the local Python CLI from this directory. Never read the workbook or `analys
 ## Installation contract
 
 Treat this folder as a self-contained, globally installable Skill. Install repository path
-`skills/audit-attendance-workbook` with the built-in `skill-installer`, then run `uv sync --locked`
+`考勤分析/skills/audit-attendance-workbook` with the built-in `skill-installer`, then run `uv sync --locked`
 inside the installed directory. The installer targets `$CODEX_HOME/skills/audit-attendance-workbook`
 and must not overwrite an existing directory without the user's explicit update decision. Tell the user
 the newly installed Skill becomes discoverable on the next turn.

@@ -6,16 +6,30 @@ ERP 物料清单 Excel（权威数据源）↔ SQLite 镜像库，支持模糊�
 
 ## 安装
 
-从 monorepo 根目录进入本分项；也可以按根 README 的 sparse checkout 指令只拉取这个目录：
+本文件夹就是物料编码工程根目录。完整拉取仓库后进入本工程：
 
 ```powershell
-Set-Location ".\projects\material-code"
+Set-Location ".\物料编码"
+uv sync --locked
+```
+
+只拉取本工程时：
+
+```powershell
+git clone --filter=blob:none --sparse `
+  git@github.com:TuKJet/functional-side-skills.git material-code-workspace
+Set-Location ".\material-code-workspace"
+git sparse-checkout set "物料编码"
+Set-Location ".\物料编码"
 uv sync --locked
 ```
 
 不要复制旧电脑的 `.venv`、SQLite 数据库、申请表或 `output`。环境由 uv 重建，业务数据由用户在
 本机提供或明确选择。随后以本目录为工作区启动 Codex，让 Agent 读取
 `.codex/skills/material-code/SKILL.md`。
+
+修改实现时也从本工程根开始：业务入口和脚本位于 `.codex/skills/material-code/scripts/`，测试位于
+`tests/`，依赖由本目录的 `pyproject.toml` 和 `uv.lock` 管理。
 
 ## 使用（工程内 Codex Skill：`.codex/skills/material-code/`）
 
