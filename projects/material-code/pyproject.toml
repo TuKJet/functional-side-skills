@@ -1,0 +1,14 @@
+[project]
+name = "wuliao-bianma"
+version = "0.1.0"
+description = "清力物料编码管理：Excel <-> SQLite 同步、模糊检索、新编码生成"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "openpyxl>=3.1.5",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<9",
+]

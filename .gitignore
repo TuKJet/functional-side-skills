@@ -1,0 +1,57 @@
+# Local migration/history retained outside the monorepo
+/.local-legacy/
+/.local-repo-backups/
+/考勤分析/
+
+# OS, editors, secrets, and logs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+.env
+.env.*
+!.env.example
+
+# Python and tool caches
+**/.venv/
+**/.uv-cache/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/*.py[cod]
+**/*.egg-info/
+**/build/
+**/dist/
+
+# Agent and local-tool scratch state
+**/.codex-tmp/
+**/.workbuddy/
+**/.workbuddy.7z
+projects/material-code/tmp/
+
+# Runtime work, outputs, and backups
+**/output/
+**/outputs/
+**/work/
+**/audit_work/
+**/backups/
+**/agent_review_queue.json
+**/agent_decisions.json
+**/analysis.json
+
+# Business data and generated office artifacts
+**/*.xlsx
+**/*.xls
+**/*.xlsm
+**/*.csv
+**/*.tsv
+**/*.db
+**/*.db-*
+**/*.db.bak
+**/*.sqlite
+**/*.sqlite3
+**/*.sqlite-*
+
+# Ad-hoc local inspection scripts
+projects/material-code/dump_range_tmp.py

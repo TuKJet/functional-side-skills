@@ -1,0 +1,45 @@
+# Python-generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.uv-cache/
+build/
+dist/
+wheels/
+*.egg-info/
+
+# Virtual environments
+.venv/
+
+# Local Agent compatibility mirrors and scratch files
+.workbuddy/
+.workbuddy.7z
+.codex-tmp/
+tmp/
+dump_range_tmp.py
+
+# Business inputs, databases, backups, state, and generated outputs
+output/
+outputs/
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.tsv
+*.db
+*.db-*
+*.db.bak
+*.sqlite
+*.sqlite3
+*.sqlite-*
+active.json
+database-confirmation.json
+
+# Local secrets and logs
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,4 @@
+interface:
+  display_name: "清力物料编码"
+  short_description: "安全处理物料申请、候选复核、料号生成与权威总表同步流程"
+  default_prompt: "Use $material-code to first require an explicit per-application database-source choice, then process the application with Top5 review and isolated output."

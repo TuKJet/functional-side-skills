@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  attendance-audit:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: skills/audit-attendance-workbook
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          working-directory: skills/audit-attendance-workbook
+          enable-cache: true
+      - name: Sync environment
+        run: uv sync --locked
+      - name: Run tests
+        run: uv run --locked pytest
+      - name: Lint
+        run: uv run --locked ruff check .
+
+  material-code:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: projects/material-code
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          working-directory: projects/material-code
+          enable-cache: true
+      - name: Sync environment
+        run: uv sync --locked
+      - name: Run tests
+        run: uv run --locked pytest

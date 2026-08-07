@@ -1,0 +1,4 @@
+interface:
+  display_name: "考勤异常筛查与矫正"
+  short_description: "自动修正班次、对齐出勤天数并按人员汇总异常日期"
+  default_prompt: "使用 $audit-attendance-workbook 筛查这份考勤表，修正可确定的班次错误、对齐出勤天数，返回一人一行的异常表，并直接列出姓名、日期、异常和处理结果。"
