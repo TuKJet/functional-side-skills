@@ -1,0 +1,4 @@
+openpyxl==3.1.5
+Pillow==12.2.0
+py7zr==0.22.0
+rarfile==4.2

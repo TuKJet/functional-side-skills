@@ -1,7 +1,10 @@
 .venv/
+venv/
 .uv-cache/
 __pycache__/
+*.py[cod]
 .pytest_cache/
+.mypy_cache/
 .ruff_cache/
 .codex-tmp/
 .workbuddy/
@@ -10,6 +13,7 @@ work/
 output/
 outputs/
 previews/
+*_assets/
 *.xlsx
 *.xls
 *.xlsm
@@ -21,7 +25,12 @@ previews/
 *.png
 *.jpg
 *.jpeg
+*.db
+*.sqlite
+*.sqlite3
 *.log
+*.tmp
+*.bak
 .env
 .env.*
 !.env.example

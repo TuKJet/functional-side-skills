@@ -9,7 +9,15 @@
 | --- | --- | --- |
 | 考勤分析 | 可用；可全局安装 | [`考勤分析/README.md`](考勤分析/README.md) |
 | 物料编码 | 可用；工程本地 Skill | [`物料编码/README.md`](物料编码/README.md) |
-| 报告自动生成 | 设计中；暂不可安装 | [`报告自动生成/README.md`](报告自动生成/README.md) |
+| 报告自动生成 | 可用；可全局安装 | [`报告自动生成/README.md`](报告自动生成/README.md) |
+
+## 一句话安装报告生成 Skill
+
+把下面这一句话发送给 Agent：
+
+```text
+请读取 https://github.com/TuKJet/functional-side-skills/blob/main/报告自动生成/README.md，使用内置 $skill-installer 从 TuKJet/functional-side-skills 的 报告自动生成/skills/generate-process-report 路径安装报告生成 Skill，按 README 安装依赖，完成后告诉我它将在下一轮对话中可用。
+```
 
 ## Agent 必须遵循的读取顺序
 

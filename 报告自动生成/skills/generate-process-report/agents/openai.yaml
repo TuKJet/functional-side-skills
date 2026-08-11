@@ -1,0 +1,4 @@
+interface:
+  display_name: "MES 工艺图文报告"
+  short_description: "从导出 Excel 生成客户可审阅的工艺图文报告"
+  default_prompt: "使用 $generate-process-report 先生成 MES 工艺 Markdown 报告，待我确认后再生成单文件 HTML。"

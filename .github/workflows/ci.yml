@@ -40,3 +40,22 @@ jobs:
         run: uv sync --locked
       - name: Run tests
         run: uv run --locked pytest
+
+  process-report:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: 报告自动生成/skills/generate-process-report
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          working-directory: 报告自动生成/skills/generate-process-report
+          enable-cache: true
+      - name: Create environment
+        run: uv venv --python 3.12
+      - name: Install dependencies
+        run: uv pip install --python .venv\Scripts\python.exe -r requirements-dev.txt
+      - name: Run tests
+        run: .venv\Scripts\python.exe -m unittest discover -s tests -v
