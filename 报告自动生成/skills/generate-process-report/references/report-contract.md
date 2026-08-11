@@ -14,7 +14,7 @@
 - Accept HTTP(S) URLs, local images, local directories, and supported archives.
 - Read ZIP and TAR members without bulk extraction. Use optional `rarfile` and `py7zr` support for RAR and 7z; warn and continue when a decoder is unavailable.
 - Traverse nested archive member paths and local directories recursively. Reject unsafe archive member paths.
-- Natural-sort image names. Reserve slots for filenames whose basename begins with `display`, case-insensitively. Fill remaining slots with evenly distributed candidates so the beginning, middle, and end are represented.
+- Natural-sort image names. If at least one basename begins with `display`, case-insensitively, restrict both selection and failure fallback to `display` images only; do not fill unused slots with ordinary images. If no `display` image exists, fill the limit with evenly distributed candidates so the beginning, middle, and end are represented.
 - If more than 10 `display` images exist, keep the first 10 in natural order and record the unavoidable limit conflict.
 - Re-encode rendered images as JPEG to normalize orientation, strip metadata, reduce size, and avoid unsafe active image content.
 

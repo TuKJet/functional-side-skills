@@ -32,7 +32,7 @@ Return the single `.html` file. It contains all styles, scripts, thumbnails, enl
 
 - Locate required fields by header text, not fixed column letters. Accept reordered columns.
 - Treat `产品规格` as an internal-only denied field. Discard its header before building the column map; never access, parse, log, or render its row values.
-- Keep image count at 10 or fewer per process. Prioritize every `display`-prefixed filename when the limit permits, then sample the naturally sorted beginning, middle, and end.
+- Keep image count at 10 or fewer per process. If any filename begins with `display` case-insensitively, render only `display`-prefixed images and never fill remaining slots with ordinary images. When no `display` image exists, sample the naturally sorted beginning, middle, and end.
 - Hide source URLs and absolute paths from customer-facing output by default.
 - Treat per-row parameter, download, archive, or image failures as warnings and continue. Fail immediately when the workbook or required headers are invalid.
 - Allow temporary downloads only inside the system temporary directory and let the script remove them at exit.

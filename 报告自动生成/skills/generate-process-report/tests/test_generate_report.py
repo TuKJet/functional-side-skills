@@ -17,12 +17,13 @@ SCRIPT = SKILL_ROOT / "scripts" / "generate_report.py"
 
 
 class GenerateProcessReportTests(unittest.TestCase):
-    def make_fixture(self, root: Path) -> Path:
+    def make_fixture(self, root: Path, include_display: bool = True) -> Path:
         media = root / "nested" / "deeper"
         media.mkdir(parents=True)
         for index in range(1, 13):
             Image.new("RGB", (180 + index, 120), (index * 12, 80, 150)).save(media / f"sample-{index}.jpg")
-        Image.new("RGB", (240, 150), (0, 180, 210)).save(media / "display-overview.jpg")
+        if include_display:
+            Image.new("RGB", (240, 150), (0, 180, 210)).save(media / "display-overview.jpg")
 
         headers = [f"字段{index}" for index in range(1, 32)]
         headers[2] = "批次编号"
@@ -86,7 +87,8 @@ class GenerateProcessReportTests(unittest.TestCase):
             self.assertIn("display-overview.jpg", content)
             self.assertNotIn("产品规格", content)
             self.assertNotIn("INTERNAL-SECRET-SPEC", content)
-            self.assertLessEqual(content.count("!["), 10)
+            self.assertEqual(content.count("!["), 1)
+            self.assertNotIn("sample-", content)
             assets = root / "report_assets"
             self.assertTrue(assets.is_dir())
             self.assertEqual(len(list(assets.glob("*.jpg"))), content.count("![") * 2)
@@ -119,6 +121,8 @@ class GenerateProcessReportTests(unittest.TestCase):
             self.assertIn("display-overview.jpg", content)
             self.assertNotIn("产品规格", content)
             self.assertNotIn("INTERNAL-SECRET-SPEC", content)
+            self.assertEqual(content.count('class="image-card"'), 1)
+            self.assertNotIn("sample-", content)
             self.assertIn('href="#process-001"', content)
             self.assertIn('id="process-001"', content)
             self.assertIn("按“工步描述”快速定位", content)
@@ -130,6 +134,17 @@ class GenerateProcessReportTests(unittest.TestCase):
             self.assertIn("nav.classList.toggle('expanded',expanded)", content)
             self.assertNotIn("overflow-x:auto", content)
             self.assertLess(content.index(">清洗</b></a>"), content.index(">曝光</b></a>"))
+
+    def test_without_display_images_fills_requested_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            workbook = self.make_fixture(root, include_display=False)
+            output = root / "ordinary.md"
+            result = self.run_script(str(workbook), "--output", str(output), "--max-images", "3")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            content = output.read_text(encoding="utf-8")
+            self.assertEqual(content.count("!["), 3)
+            self.assertIn("sample-", content)
 
 
 if __name__ == "__main__":

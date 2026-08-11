@@ -568,16 +568,12 @@ def evenly_spaced(items: list[Candidate], count: int) -> list[Candidate]:
 
 def select_candidates(candidates: list[Candidate], limit: int) -> tuple[list[Candidate], str | None]:
     priority = [candidate for candidate in candidates if candidate.display_priority]
-    if len(priority) >= limit:
+    if priority:
         warning = None
         if len(priority) > limit:
             warning = f"发现 {len(priority)} 张 display 前缀图片，受每段 {limit} 张上限约束，仅展示前 {limit} 张。"
         return priority[:limit], warning
-    priority_ids = {candidate.identity for candidate in priority}
-    remainder = [candidate for candidate in candidates if candidate.identity not in priority_ids]
-    chosen = priority + evenly_spaced(remainder, limit - len(priority))
-    order = {candidate.identity: index for index, candidate in enumerate(candidates)}
-    return sorted(chosen, key=lambda item: order[item.identity]), None
+    return evenly_spaced(candidates, limit), None
 
 
 def render_image(candidate: Candidate, max_image_bytes: int) -> RenderedImage:
@@ -850,8 +846,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             selected, warning = select_candidates(candidates, args.max_images)
             if warning:
                 record.warnings.append(warning)
+            display_candidates = [candidate for candidate in candidates if candidate.display_priority]
+            eligible_candidates = display_candidates if display_candidates else candidates
             images_by_row[record.excel_row] = materialize(
-                candidates,
+                eligible_candidates,
                 selected,
                 args.max_images,
                 args.max_image_mb,
