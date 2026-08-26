@@ -58,6 +58,7 @@ Example: an A-shift late record with punches `10:00,21:00` can become a normal B
 - Recalculate T-Z from final daily statuses only for rows without unresolved Agent items.
 - Include only findings with an exact date in the anomaly workbook: deterministic daily anomalies, automatic shift corrections, unresolved daily text, ambiguous shifts, and unscheduled punches.
 - Group the anomaly workbook to one row per person. Within the row, sort dates ascending and combine same-day findings.
+- Put the full original daily attendance cell beside each dated anomaly, preserving shift/status, events, and the final punch suffix. Compact internal line breaks so each date occupies one aligned line across `异常日期与类型`, `原始考勤数据`, `处理结果`, and `待人工确认`.
 - Keep the anomaly sheet as a styled range with one worksheet-level auto-filter. Do not create a structured table over the same range.
 - Exclude monthly summary reconciliation and R-column alignment records from the anomaly workbook and LLM summary; keep their audit trail in corrected-workbook comments and CLI counts.
 - Write a minimal LLM summary containing only name, exact date, anomaly detail, and handling. The Agent must use that summary for its user-facing list and must not read the workbooks or `analysis.json`.

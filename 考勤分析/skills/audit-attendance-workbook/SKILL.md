@@ -1,6 +1,6 @@
 ---
 name: audit-attendance-workbook
-description: Audit and align a monthly attendance .xlsx with four header rows, R attendance days, T-Z exception summaries, and daily records from AG onward. Use when Codex must find missing punches, lateness, early departure, absence, colored special records, or fixed-shift misclassification; local Python corrects deterministic A/B shift cases, aligns R from final daily statuses, and returns an original-format aligned workbook, a one-person-per-row dated anomaly workbook, and a minimal LLM-ready anomaly summary.
+description: Audit and align a monthly attendance .xlsx with four header rows, R attendance days, T-Z exception summaries, and daily records from AG onward. Use when Codex must find missing punches, lateness, early departure, absence, colored special records, or fixed-shift misclassification; local Python corrects deterministic A/B shift cases, aligns R from final daily statuses, and returns an original-format aligned workbook, a one-person-per-row dated anomaly workbook with source attendance text for review, and a minimal LLM-ready anomaly summary.
 ---
 
 # Audit attendance workbook
@@ -52,7 +52,7 @@ Python owns screening, attendance calculations, approved-event exclusion, determ
 - In the R-alignment step, process only recorded single-side missing punches and final late/early minutes. Do not infer or process `旷工`; keep the result from the earlier anomaly and T-Z stage.
 - Keep personnel and organization metadata out of Agent files.
 - The final `llm_summary_file` is the only model-readable named output. It contains only name, date, anomaly detail, and handling; do not enrich it with employee ID, department, position, attendance group, or unrelated dates.
-- Keep the anomaly workbook one person per row. Combine multiple dated anomalies into wrapped multi-line cells and exclude all rows without an exact date.
+- Keep the anomaly workbook one person per row. Align `异常日期与类型`, `原始考勤数据`, `处理结果`, and `待人工确认` line by line for the same sorted dates. Preserve the full original daily attendance text, including the punch suffix, but compact its internal line breaks for horizontal review. Exclude all rows without an exact date.
 - Use a worksheet-level auto-filter only. Do not add an overlapping structured Excel table, which can make desktop Excel repair `table1.xml` on open.
 - Keep monthly T-Z reconciliation and R-column alignment out of the anomaly workbook and LLM summary. Record them only in corrected-workbook comments and aggregate CLI counts.
 - Preserve workbook structure and formatting, verify the source hash, and reopen both outputs before reporting success.

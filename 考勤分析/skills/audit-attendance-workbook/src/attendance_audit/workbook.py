@@ -568,6 +568,12 @@ def _status_line(value: Any) -> str:
     return str(value or "").splitlines()[0].strip()
 
 
+def _inline_original_text(value: Any) -> str:
+    parts = [part.strip() for part in str(value or "").replace("\r", "\n").splitlines()]
+    compact = [part for part in parts if part]
+    return " ｜ ".join(compact) if compact else "（空白）"
+
+
 def _day_handling(day: dict[str, Any]) -> str:
     original = _status_line(day.get("original_text"))
     corrected = _status_line(day.get("corrected_text"))
@@ -623,18 +629,20 @@ def _summarize_daily_anomalies(
     llm_items: list[dict[str, Any]] = []
     for person in people.values():
         date_lines: list[str] = []
-        automatic_lines: list[str] = []
+        original_lines: list[str] = []
+        handling_lines: list[str] = []
         review_lines: list[str] = []
         for date_value, day in sorted(person["days"].items()):
             label = f"{date_value[5:]}（{_weekday(date_value)}）"
             anomaly = "、".join(day["categories"])
             detail = "；".join(day["messages"])
             handling = _day_handling(day)
-            date_lines.append(f"{label} {anomaly}：{detail}")
-            if day["auto_corrected"]:
-                automatic_lines.append(f"{label} {handling.split(' 需人工确认：', 1)[0]}")
-            if day["needs_human_review"]:
-                review_lines.append(f"{label} {detail}")
+            date_lines.append(f"{label} {anomaly}")
+            original_lines.append(f"{label} {_inline_original_text(day['original_text'])}")
+            handling_lines.append(f"{label} {handling.split(' 需人工确认：', 1)[0]}")
+            review_lines.append(
+                f"{label} {detail}" if day["needs_human_review"] else f"{label} 无需人工确认"
+            )
             llm_items.append(
                 {
                     "name": person["name"],
@@ -650,8 +658,12 @@ def _summarize_daily_anomalies(
                 "employee_id": person["employee_id"],
                 "anomaly_days": len(person["days"]),
                 "date_lines": date_lines,
-                "automatic_lines": automatic_lines,
+                "original_lines": original_lines,
+                "handling_lines": handling_lines,
                 "review_lines": review_lines,
+                "review_required": any(
+                    day["needs_human_review"] for day in person["days"].values()
+                ),
             }
         )
     return person_summaries, llm_items
@@ -668,7 +680,8 @@ def _create_anomaly_workbook(rows: list[dict[str, Any]], output_path: Path) -> N
         "工号",
         "异常天数",
         "异常日期与类型",
-        "自动处理结果",
+        "原始考勤数据",
+        "处理结果",
         "待人工确认",
     ]
     worksheet.append(headers)
@@ -680,14 +693,16 @@ def _create_anomaly_workbook(rows: list[dict[str, Any]], output_path: Path) -> N
                 person["employee_id"],
                 person["anomaly_days"],
                 "\n".join(person["date_lines"]),
-                "\n".join(person["automatic_lines"]) or "无",
-                "\n".join(person["review_lines"]) or "无",
+                "\n".join(person["original_lines"]),
+                "\n".join(person["handling_lines"]),
+                "\n".join(person["review_lines"]),
             ]
         )
         row_number = index + 1
         line_count = max(
             person["anomaly_days"],
-            len(person["automatic_lines"]),
+            len(person["original_lines"]),
+            len(person["handling_lines"]),
             len(person["review_lines"]),
             1,
         )
@@ -701,24 +716,25 @@ def _create_anomaly_workbook(rows: list[dict[str, Any]], output_path: Path) -> N
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = Border(bottom=thin_gray)
-    for row in worksheet.iter_rows(min_row=2):
+    for person, row in zip(person_summaries, worksheet.iter_rows(min_row=2), strict=True):
         for cell in row:
             cell.alignment = Alignment(vertical="top", wrap_text=True)
         row[0].alignment = Alignment(horizontal="center", vertical="top")
         row[3].alignment = Alignment(horizontal="center", vertical="top")
-        if row[5].value != "无":
-            row[5].fill = PatternFill("solid", fgColor="E2F0D9")
-        if row[6].value != "无":
-            row[6].fill = PatternFill("solid", fgColor="FFF2CC")
+        row[5].fill = PatternFill("solid", fgColor="F2F2F2")
+        row[6].fill = PatternFill("solid", fgColor="E2F0D9")
+        if person["review_required"]:
+            row[7].fill = PatternFill("solid", fgColor="FFF2CC")
     worksheet.row_dimensions[1].height = 26
     widths = {
         "A": 8,
         "B": 12,
         "C": 12,
         "D": 10,
-        "E": 62,
-        "F": 54,
+        "E": 30,
+        "F": 52,
         "G": 54,
+        "H": 50,
     }
     for column, width in widths.items():
         worksheet.column_dimensions[column].width = width

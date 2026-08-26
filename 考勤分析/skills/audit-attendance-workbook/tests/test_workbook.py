@@ -83,7 +83,8 @@ def test_end_to_end_corrects_copy_and_builds_anomaly_workbook(tmp_path: Path) ->
         "工号",
         "异常天数",
         "异常日期与类型",
-        "自动处理结果",
+        "原始考勤数据",
+        "处理结果",
         "待人工确认",
     ]
     assert len(rows) == 2
@@ -92,6 +93,14 @@ def test_end_to_end_corrects_copy_and_builds_anomaly_workbook(tmp_path: Path) ->
     assert "07-02（四） 迟到" in anomaly_detail
     assert "07-03（五） 未排班打卡" in anomaly_detail
     assert "出勤天数已对齐" not in anomaly_detail
+    original_detail = rows[1][headers.index("原始考勤数据")]
+    assert "07-02（四） 研发A班:正常 ｜ (09:20,18:26)" in original_detail
+    assert "07-03（五） 未排班 ｜ (09:00,18:35)" in original_detail
+    assert len(original_detail.splitlines()) == 2
+    handling_detail = rows[1][headers.index("处理结果")]
+    assert "07-02（四） 已自动将“研发A班:正常”修正为“研发A班:上班迟到10分钟”" in handling_detail
+    assert "07-03（五） 已自动将“未排班”修正为“未排班并打卡”" in handling_detail
+    assert len(handling_detail.splitlines()) == 2
 
     llm_summary = json.loads(Path(finalized["llm_summary_file"]).read_text(encoding="utf-8"))
     assert len(llm_summary["items"]) == 2
@@ -104,8 +113,9 @@ def test_end_to_end_corrects_copy_and_builds_anomaly_workbook(tmp_path: Path) ->
 
     anomaly_editable = load_workbook(finalized["anomaly_workbook"])
     anomaly_sheet = anomaly_editable["异常审查"]
-    assert anomaly_sheet.auto_filter.ref == "A1:G2"
+    assert anomaly_sheet.auto_filter.ref == "A1:H2"
     assert not anomaly_sheet.tables
+    assert anomaly_sheet["H2"].fill.fill_type == "solid"
     with ZipFile(finalized["anomaly_workbook"]) as archive:
         names = set(archive.namelist())
         assert "xl/tables/table1.xml" not in names
@@ -166,7 +176,11 @@ def test_python_auto_corrects_decisive_shift_misclassification(tmp_path: Path, m
     headers = list(values[0])
     assert len(values) == 2
     assert "班次错排已矫正" in values[1][headers.index("异常日期与类型")]
-    assert "已自动将" in values[1][headers.index("自动处理结果")]
+    assert "研发A班:上班迟到50分钟 ｜ (10:00,21:00)" in values[1][headers.index("原始考勤数据")]
+    assert "已自动将" in values[1][headers.index("处理结果")]
+    assert "无需人工确认" in values[1][headers.index("待人工确认")]
+    anomaly_editable = load_workbook(finalized["anomaly_workbook"])
+    assert anomaly_editable["异常审查"]["H2"].fill.fill_type is None
 
 
 def test_monthly_audit_records_do_not_enter_daily_anomaly_workbook(tmp_path: Path) -> None:
