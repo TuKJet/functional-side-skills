@@ -4,7 +4,7 @@ HR 只需说：“请按这份文档安装招聘工作台。”完成配置后�
 
 ## 选择下载
 
-打开 [最新发布](https://github.com/TuKJet/functional-side-skills/releases/latest)：Apple 芯片选 `hr-resume-macos-aarch64.dmg`，Intel 选 `hr-resume-macos-x86_64.dmg`。目前支持 macOS 11 及更新版本。Agent 安装 Skill 时自动下载并校验 DMG，挂载后将“招聘看板”拖入“应用程序”。用户不需要下载工程 ZIP。
+打开 [最新发布](https://github.com/TuKJet/functional-side-skills/releases/latest)：仅提供 Apple 芯片版 `hr-resume-macos-aarch64.dmg`，支持 macOS 11 及更新版本；Intel Mac 暂不支持。Agent 安装 Skill 时自动下载并校验 DMG，挂载后将“招聘看板”拖入“应用程序”。用户不需要下载工程 ZIP。
 
 目前仅有 ad-hoc 签名，没有 Apple Developer 签名或公证。首次打开若被拦截，确认下载来源后按 [Apple 官方说明](https://support.apple.com/zh-cn/102445) 在系统设置的“隐私与安全性”允许该应用；不需要关闭 Gatekeeper，也不要运行全局取消安全检查的命令。
 

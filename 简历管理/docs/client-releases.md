@@ -4,19 +4,18 @@
 
 日常只需告诉 WorkBuddy：**“请检查 HR Skill 和招聘客户端是否有新版，保留我的本地资料、NAS 与配置，完成升级后告诉我。”**
 
-安装 Agent 会自动下载客户端并配置好。Windows 是单个 EXE，完成后问你是否创建桌面快捷方式；Mac 是 DMG，安装到“应用程序”。也可从 [最新版本](https://github.com/TuKJet/functional-side-skills/releases/latest) 下载，Mac 按 Apple / Intel 芯片选择。Mac 首次安装见 [Mac 指南](macos-install.md)。
+安装 Agent 会自动下载客户端并配置好。Windows 是单个 EXE，完成后问你是否创建桌面快捷方式；Mac 是 DMG，安装到“应用程序”。也可从 [最新版本](https://github.com/TuKJet/functional-side-skills/releases/latest) 下载，Mac 仅支持 Apple 芯片。Mac 首次安装见 [Mac 指南](macos-install.md)。
 
 ## 给维护 Agent
 
 代码入口：`.github/workflows/hr-client-release.yml`。`main` 中 `简历管理/**` 或该工作流变化会自动构建；其他工程变更不触发 HR 发布。Pull Request 只校验，不发布；也可在 main 上通过 Actions 的 Run workflow 手动构建。
 
-GitHub 在 Windows x64、macOS Apple 芯片、macOS Intel 三台 runner 上运行 Rust/Web/Python 检查，构建内嵌网页的原生客户端、下载依赖 wheelhouse、验证安装和无界面数据接口。所有平台成功后，发布 job 才能创建 Release。普通构建只有仓库只读权限，发布 job 才拥有 `contents:write`。
+GitHub 在 Windows x64 和 macOS Apple 芯片两台 runner 上运行 Rust/Web/Python 检查，构建内嵌网页的原生客户端、下载依赖 wheelhouse、验证安装和无界面数据接口。所有平台成功后，发布 job 才能创建 Release。普通构建只有仓库只读权限，发布 job 才拥有 `contents:write`。
 
 每次发布保留具体源码提交，tag 使用 `hr-client-v<版本>-run<流水号>`。下载包使用稳定名称，附带标准 SHA256 文件：
 
 - `hr-resume-windows-x64.exe`
 - `hr-resume-macos-aarch64.dmg`
-- `hr-resume-macos-x86_64.dmg`
 
 客户端版本由 `desktop/Cargo.toml` 管理。修改客户端、打包或安装行为后应检查版本并按需递增；自动流水号使同版本维护构建也可追溯。macOS 暂无开发者签名和公证，不能宣称已签名；后续需配置 Apple Developer 凭据才能加入该步骤。
 

@@ -41,15 +41,17 @@ def _platform(value: str | None = None) -> str:
     if sys.platform == "win32":
         return "windows"
     if sys.platform == "darwin":
-        return "macos-aarch64" if platform.machine().lower() in {"arm64", "aarch64"} else "macos-x86_64"
-    raise ClientError("当前系统不支持客户端自动下载；仅支持 Windows 和 macOS。")
+        if platform.machine().lower() in {"arm64", "aarch64"}:
+            return "macos-aarch64"
+        raise ClientError("当前 Mac 为 Intel 芯片；目前只发布 Apple 芯片版本。")
+    raise ClientError("当前系统不支持客户端自动下载；仅支持 Windows 和 Apple 芯片 Mac。")
 
 
 def _names(kind: str) -> tuple[str, str]:
     if kind == "windows":
         return "hr-resume-windows-x64.exe", "hr-resume-windows-x64.sha256"
-    if kind in {"macos-aarch64", "macos-x86_64"}:
-        return f"hr-resume-{kind}.dmg", f"hr-resume-{kind}.sha256"
+    if kind == "macos-aarch64":
+        return "hr-resume-macos-aarch64.dmg", "hr-resume-macos-aarch64.sha256"
     raise ClientError(f"不支持的平台标识：{kind}")
 
 

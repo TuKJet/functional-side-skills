@@ -16,8 +16,8 @@ command -v hdiutil >/dev/null || { echo "hdiutil is required" >&2; exit 10; }
 command -v codesign >/dev/null || { echo "codesign is required" >&2; exit 10; }
 [[ -f "$project_root/scripts/setup_macos.py" ]] || { echo "setup_macos.py is required" >&2; exit 10; }
 case "$target" in
-  x86_64-apple-darwin|aarch64-apple-darwin) ;;
-  *) echo "target must be x86_64-apple-darwin or aarch64-apple-darwin" >&2; exit 2 ;;
+  aarch64-apple-darwin) ;;
+  *) echo "Only Apple Silicon (aarch64-apple-darwin) is supported" >&2; exit 2 ;;
 esac
 
 out="${2:-$project_root/dist/hr-resume-macos-$target}"

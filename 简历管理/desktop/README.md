@@ -2,7 +2,7 @@
 
 Rust 服务在本机启动，Windows 窗口通过 WebView2、macOS 窗口通过系统 WebKit 内嵌招聘看板。日常 Web UI 没有资料录入表单或技术设置页；维护和审核由 WorkBuddy Skill 完成。
 
-Windows 构建和运行说明如下。macOS 安装见 [Mac 指南](../docs/macos-install.md)；打包命令为 `bash scripts/package-macos.sh aarch64-apple-darwin OUTPUT WHEELHOUSE`（从工程根执行），Intel 使用 `x86_64-apple-darwin`。`.app` 仅包含程序，用户配置和 WebView 缓存位于 `~/Library/Application Support/HRResume/`；源 Skill 安装到用户选择的独立目录。GitHub 自动发布见 [发布说明](../docs/client-releases.md)。
+Windows 构建和运行说明如下。macOS 安装见 [Mac 指南](../docs/macos-install.md)；打包命令为 `bash scripts/package-macos.sh aarch64-apple-darwin OUTPUT WHEELHOUSE`（从工程根执行）；仅支持 Apple 芯片 Mac。`.app` 仅包含程序，用户配置和 WebView 缓存位于 `~/Library/Application Support/HRResume/`；源 Skill 安装到用户选择的独立目录。GitHub 自动发布见 [发布说明](../docs/client-releases.md)。
 
 ## 构建与启动（给安装 Agent）
 

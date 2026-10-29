@@ -2,9 +2,9 @@
 
 这是一个不使用数据库的招聘协作工程：每位 HR 有自己的本地工作副本，Skill 负责维护和审核，Rust 客户端在 Windows / macOS 独立窗口内嵌看板，NAS Hub 用于多人交换进展。
 
-**下载：[最新客户端](https://github.com/TuKJet/functional-side-skills/releases/latest)。Windows 是单个 `hr-resume-windows-x64.exe`；Mac 的“关于本机”显示 Apple 芯片选 `macos-aarch64.dmg`，显示 Intel 选 `macos-x86_64.dmg`。不用解压工程包。**
+**下载：[最新客户端](https://github.com/TuKJet/functional-side-skills/releases/latest)。Windows 是单个 `hr-resume-windows-x64.exe`；Mac 仅支持 Apple 芯片，下载 `hr-resume-macos-aarch64.dmg`。不用解压工程包。**
 
-首次安装交给 Agent：Windows 读 [Windows 安装指南](docs/agent-install.md)，Mac 读 [macOS 安装指南](docs/macos-install.md)。后续客户端变更推入 main 后，GitHub 自动测试、编译并发布三个芯片安装包；发布流程和升级规则见 [客户端发布与升级](docs/client-releases.md)。
+首次安装交给 Agent：Windows 读 [Windows 安装指南](docs/agent-install.md)，Mac 读 [macOS 安装指南](docs/macos-install.md)。后续客户端变更推入 main 后，GitHub 自动测试、编译并发布 Windows EXE 和 Apple 芯片 Mac DMG；发布流程和升级规则见 [客户端发布与升级](docs/client-releases.md)。
 
 **职能同事双击 [使用说明.html](使用说明.html)，一页看完；也有 [文字版](docs/hr-user-guide.md)。安装 Agent 先读本页，再按 [安装指南](docs/agent-install.md) 执行。**
 

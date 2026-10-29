@@ -72,14 +72,13 @@ jobs:
       - name: Package Windows client
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           $version = ((Get-Content desktop/Cargo.toml -Raw) -match '(?m)^version\s*=\s*"([^"]+)"$') | Out-Null; $version = $Matches[1]
           $out = Join-Path $env:RUNNER_TEMP ("hr-resume-windows-$version")
           .\scripts\package-windows.ps1 -OutputDirectory $out -Wheelhouse "$env:RUNNER_TEMP\wheelhouse" -Executable desktop\target\release\hr-resume-viewer.exe -SkipBuild
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $skill = Join-Path $env:RUNNER_TEMP 'hr-skill'
           $local = Join-Path $env:RUNNER_TEMP 'hr-local'
           & (Join-Path $out 'scripts\setup.ps1') -SkillTarget $skill -LocalRoot $local -Actor 'GitHub Actions' -Wheelhouse (Join-Path $out 'wheelhouse') -SkipSync
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & (Join-Path $skill '.venv\Scripts\python.exe') (Join-Path $skill 'scripts\hr.py') --root $local --actor 'GitHub Actions' doctor
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & (Join-Path $skill '.venv\Scripts\python.exe') (Join-Path $skill 'scripts\hr.py') --root $local --actor 'GitHub Actions' snapshot
@@ -89,6 +88,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: hr-client-windows-x64
+          if-no-files-found: error
           path: |
             hr-resume-windows-x64.exe
             hr-resume-windows-x64.sha256
@@ -102,9 +102,6 @@ jobs:
           - arch: aarch64
             target: aarch64-apple-darwin
             runner: macos-15
-          - arch: x86_64
-            target: x86_64-apple-darwin
-            runner: macos-15-intel
     runs-on: ${{ matrix.runner }}
     env:
       MACOSX_DEPLOYMENT_TARGET: '11.0'
@@ -146,6 +143,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: hr-client-macos-${{ matrix.arch }}
+          if-no-files-found: error
           path: |
             hr-resume-macos-${{ matrix.arch }}.dmg
             hr-resume-macos-${{ matrix.arch }}.sha256
@@ -173,11 +171,14 @@ jobs:
           set -euo pipefail
           version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$PROJECT/desktop/Cargo.toml" | head -n1)
           tag="hr-client-v${version}-run${GITHUB_RUN_NUMBER}"
+          for expected in hr-resume-windows-x64.exe hr-resume-windows-x64.sha256 hr-resume-macos-aarch64.dmg hr-resume-macos-aarch64.sha256; do
+            test -s "artifacts/$expected" || { echo "Required release asset missing: $expected" >&2; exit 1; }
+          done
           (cd artifacts && sha256sum --check *.sha256)
           printf '%s\n' \
             "HR 招聘工作台 ${version}" \
             "" \
-            "Windows 直接下载单个 EXE；Mac 按 Apple / Intel 芯片下载 DMG。" \
+            "Windows x64 直接下载单个 EXE；Apple 芯片 Mac 下载 DMG。Intel Mac 暂不支持。" \
             "Agent 安装 Skill 时会自动下载并配置客户端，然后询问是否在桌面创建快捷方式。" \
             "macOS 使用 ad-hoc 签名，没有 Developer ID 签名或公证；首次打开请按系统安全提示处理。" \
             "" \
@@ -192,4 +193,7 @@ jobs:
               --draft
           fi
           gh release upload "$tag" artifacts/* --clobber
+          for expected in hr-resume-windows-x64.exe hr-resume-windows-x64.sha256 hr-resume-macos-aarch64.dmg hr-resume-macos-aarch64.sha256; do
+            gh release view "$tag" --json assets --jq '.assets[].name' | grep -Fx "$expected" >/dev/null
+          done
           gh release edit "$tag" --draft=false --latest --notes-file release-notes.md

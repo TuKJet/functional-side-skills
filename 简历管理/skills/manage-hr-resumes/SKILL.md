@@ -69,7 +69,7 @@ description: Manage a folder-based HR resume pool, department job descriptions, 
 
 随后可调用 `check`、`update`、`rollback` 或 `refresh-package`。更新器只接受固定的 GitHub 仓库、Skill 路径和 `main` 分支，并以 API 返回的完整 commit SHA 下载 ZIP；上游不存在时返回 `upstream_missing`，不会伪称已上线。返回值始终是 JSON，失败使用非零退出码。下载会校验 ZIP 越界、符号链接、体积、Python 语法和 `SKILL.md` 结构；本地托管文件变更返回 `local_changes`，依赖变更返回 `dependency_change`，均不覆盖或半升级。`refresh-package` 生成 `.update/workbuddy-package.zip`，只在本 Skill 明确包含 `workspace.local.json` 时放入该配置。更新成功会返回该包路径；上传前需确认包仅供本机使用。更新后需重新导入生成的 WorkBuddy 包或开启新会话以刷新 Skill 指令；更新器不擅自重建或替换看板 EXE。
 
-首次安装本 Skill 或用户请求客户端升级时，在配置完成后自动执行 `配置中的python scripts/hr_client.py download --skill-root 当前Skill绝对路径`，不再询问是否下载。它只选择固定仓库 `TuKJet/functional-side-skills` 已正式发布的 `hr-client-` 版本，按系统下载单个 `hr-resume-windows-x64.exe`、`hr-resume-macos-aarch64.dmg`（Apple 芯片）或 `hr-resume-macos-x86_64.dmg`（Intel），校验 SHA256 后保存到新的版本目录，并把个人配置写入客户端读取的用户目录。无需用户下载或解压工程 ZIP；不会自动启动下载的文件。日常业务不重复下载。
+首次安装本 Skill 或用户请求客户端升级时，在配置完成后自动执行 `配置中的python scripts/hr_client.py download --skill-root 当前Skill绝对路径`，不再询问是否下载。它只选择固定仓库 `TuKJet/functional-side-skills` 已正式发布的 `hr-client-` 版本，按系统下载单个 `hr-resume-windows-x64.exe`或 `hr-resume-macos-aarch64.dmg`（Apple 芯片，Intel Mac 暂不支持），校验 SHA256 后保存到新的版本目录，并把个人配置写入客户端读取的用户目录。无需用户下载或解压工程 ZIP；不会自动启动下载的文件。日常业务不重复下载。
 
 下载成功后明确告诉用户 Windows 的 `executable` 路径；Mac 的 `dmg` 还需安装至“应用程序”，`need_install:true` 不能称作已安装。再询问“是否需要在桌面创建招聘工作台快捷方式？”Windows 只有用户同意后才运行 `配置中的python scripts/hr_client.py shortcut --executable 下载结果中的绝对EXE路径`。用户拒绝则不创建，不重复追问；快捷方式命令会再次校验目标路径和 SHA256。Mac 可按用户选择创建 Finder 替身或加入程序坞，不调用 Windows shortcut 命令。
 

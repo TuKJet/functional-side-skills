@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -64,6 +65,8 @@ def validate_paths(skill, local, remote, config, use_existing):
 def install(args):
     if sys.platform != 'darwin':
         raise ValueError('本脚本用于 macOS；Windows 请运行 scripts/setup.ps1。')
+    if platform.machine().lower() not in ('arm64', 'aarch64'):
+        raise ValueError('目前仅支持 Apple 芯片 Mac；Intel Mac 暂不支持。请使用原生 arm64 Python。')
     if sys.version_info < (3, 11):
         raise ValueError('需要 Python 3.11 或更新版本。')
     actor = args.actor.strip()

@@ -94,6 +94,13 @@ class ClientDownloadTests(unittest.TestCase):
         self.assertEqual(old.name, 'hr-resume-windows-x64.exe')
         self.assertNotEqual((self.base / 'other' / old.name).parent.name, old.parent.name)
 
+    def test_intel_mac_is_explicitly_unsupported(self):
+        with patch.object(client.sys, 'platform', 'darwin'), patch.object(client.platform, 'machine', return_value='x86_64'):
+            with self.assertRaisesRegex(client.ClientError, 'Intel'):
+                client._platform()
+        with self.assertRaisesRegex(client.ClientError, '不支持'):
+            client._names('macos-x86_64')
+
 
 if __name__ == '__main__':
     unittest.main()
