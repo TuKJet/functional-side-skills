@@ -2,6 +2,16 @@
 
 验收日期：2026-10-29。全部为合成资料；没有接入公司真实 NAS 或真实候选人资料。
 
+## 最新正式发布验收
+
+- 源码已推送 `main`，客户端构建提交：`0a50d5f3e9ffac0124666ff92e7243feb771dd31`。
+- [GitHub Actions 40854599632](https://github.com/TuKJet/functional-side-skills/actions/runs/40854599632) 全部成功：Windows x64、Apple 芯片 macOS、正式发布。仓库原有 CI 同时通过。
+- [Release hr-client-v0.3.0-run3](https://github.com/TuKJet/functional-side-skills/releases/tag/hr-client-v0.3.0-run3) 是正式非草稿版本，提供单个 Windows EXE、Apple 芯片 DMG 和各自 SHA256；不提供 Intel Mac。上传缺文件会失败，发布前后逐一检查四个必需文件。
+- Windows EXE 已从该 Release 真实下载到独立临时目录，SHA256 为 `8e13e4ab7dc752f1978db1343140fdb1ea300367024bbb0d7025f5a49a42c64d`；`--check-runtime` 成功，`--headless` 自动读取隔离的用户配置并成功调用安装 Skill 的 snapshot。没有启动窗口，也没有创建桌面快捷方式。
+- 真实 Skill 更新器在隔离副本完成从 `d31b630` 到 `905c186` 的 GitHub 升级；再次 check 返回当前已是最新且无本地修改。此次验证不覆盖用户业务目录。
+- Windows 更新器的 CRLF/LF/BOM 差异误判已修复，真实依赖版本变化仍拒绝。Windows/Apple 芯片客户端均已在对应 runner 编译、进行无界面接口与安装检查；Mac 实屏交互、Gatekeeper 和公司 WorkBuddy/NAS 仍需目标环境验收。
+- macOS 仅使用 ad-hoc 签名，没有 Developer ID 签名或公证。以下小节保留此前本地开发验收记录，旧 ZIP 不作为当前用户下载入口。
+
 ## 可复现检查
 
 工程根目录：
@@ -49,7 +59,7 @@ python -m unittest discover -s desktop/tests -v
 
 - 10 项离线回归测试通过，覆盖检查、升级、回退、本地修改拦截、依赖变化拦截、恶意归档拒绝、更新中断和回退失败重试；独立代码审查通过。
 - WorkBuddy 更新包排除运行时、更新备份和业务资料；升级/回退保留个人配置和工作副本。
-- 真实 GitHub 只读检查返回 `upstream_missing`：当前 `TuKJet/functional-side-skills` 的 `main` 分支尚未包含本项目 Skill 路径。未执行远端升级、提交或推送；发布后才能获取真实更新。
+- 首次发布前的 GitHub 只读检查曾返回 `upstream_missing`；目前源码已推送且真实升级已验证，结果见本页顶部最新发布记录。
 
 ## 部署边界
 

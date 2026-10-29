@@ -71,6 +71,6 @@ description: Manage a folder-based HR resume pool, department job descriptions, 
 
 首次安装本 Skill 或用户请求客户端升级时，在配置完成后自动执行 `配置中的python scripts/hr_client.py download --skill-root 当前Skill绝对路径`，不再询问是否下载。它只选择固定仓库 `TuKJet/functional-side-skills` 已正式发布的 `hr-client-` 版本，按系统下载单个 `hr-resume-windows-x64.exe`或 `hr-resume-macos-aarch64.dmg`（Apple 芯片，Intel Mac 暂不支持），校验 SHA256 后保存到新的版本目录，并把个人配置写入客户端读取的用户目录。无需用户下载或解压工程 ZIP；不会自动启动下载的文件。日常业务不重复下载。
 
-下载成功后明确告诉用户 Windows 的 `executable` 路径；Mac 的 `dmg` 还需安装至“应用程序”，`need_install:true` 不能称作已安装。再询问“是否需要在桌面创建招聘工作台快捷方式？”Windows 只有用户同意后才运行 `配置中的python scripts/hr_client.py shortcut --executable 下载结果中的绝对EXE路径`。用户拒绝则不创建，不重复追问；快捷方式命令会再次校验目标路径和 SHA256。Mac 可按用户选择创建 Finder 替身或加入程序坞，不调用 Windows shortcut 命令。
+上述及以下命令中的 `scripts/hr_client.py` 均应替换为当前已安装 Skill 内该脚本的绝对路径，不依赖当前工作目录。下载成功后明确告诉用户 Windows 的 `executable` 路径；Mac 的 `dmg` 还需安装至“应用程序”，`need_install:true` 不能称作已安装。再询问“是否需要在桌面创建招聘工作台快捷方式？”Windows 只有用户同意后才运行 `配置中的python scripts/hr_client.py shortcut --executable 下载结果中的绝对EXE路径`。用户拒绝则不创建，不重复追问；快捷方式命令会再次校验目标路径和 SHA256。Mac 可按用户选择创建 Finder 替身或加入程序坞，不调用 Windows shortcut 命令。
 
 客户端下载入口为 `https://github.com/TuKJet/functional-side-skills/releases/latest`。保留旧程序和配置备份以便回退，不删除业务资料。Mac 仅有 ad-hoc 签名，无 Developer ID 签名或公证；不绕过系统全局安全设置。macOS 调用 CLI 和更新器同样使用配置中的 `.venv/bin/python` 绝对路径，不要求 PowerShell。源码中的 `docs/client-releases.md` 提供维护流程；只有 `doctor`、`snapshot`、运行环境与客户端实际检查通过，才报告可用。
