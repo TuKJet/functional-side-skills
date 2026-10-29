@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "provider": "github",
+  "repository": "TuKJet/functional-side-skills",
+  "path": "简历管理/skills/manage-hr-resumes",
+  "branch": "main"
+}

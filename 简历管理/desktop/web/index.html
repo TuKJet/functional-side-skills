@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TalentFlow · 招聘看板</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+<a class="brand" href="#" aria-label="TalentFlow 总览"><span class="brand-icon"><svg viewBox="0 0 32 32"><path d="m6 8 10 6 10-6v8L16 26 6 16Z"/><path d="M16 14v12M6 8l10 6 10-6"/></svg></span><span>Talent<span class="brand-light">Flow</span></span></a>
+<div class="workspace-caption">人才工作空间 <span class="workspace-dot"></span></div>
+<nav id="navigation" aria-label="主导航"></nav>
+<div class="sidebar-bottom">
+<div class="local-status"><span class="status-light" id="status-light"></span><span id="local-status">本地工作区</span><button id="refresh" class="icon-btn" aria-label="刷新数据"></button></div>
+<div class="profile"><span id="profile-avatar" class="profile-avatar">职</span><div><strong id="profile-name">职能团队</strong><small>人才与组织</small></div><span class="profile-mark">HR</span></div>
+</div>
+</aside>
+<main>
+<header class="topbar"><div class="breadcrumb"><span>工作空间</span><i>/</i><strong id="page-label">总览</strong><span id="demo-pill" class="demo-pill" hidden>演示工作区</span></div><div class="top-controls"><label class="search"><span id="search-icon"></span><input id="search" aria-label="搜索候选人、岗位" placeholder="搜索候选人、岗位"></label><select id="month" aria-label="筛选招聘月份"><option value="">全部月份</option></select><button id="sync" class="sync-button"></button></div></header>
+<section id="content" class="content" aria-live="polite"></section>
+<footer><span>TalentFlow · 招聘看板</span><span id="updated-label">本地资料 · 由团队共同维护</span></footer>
+</main>
+</div>
+<div id="drawer-overlay" class="overlay" hidden><aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-label="资料详情" tabindex="-1"><button id="close-drawer" class="close-button" aria-label="关闭详情"></button><div id="drawer-content"></div></aside></div>
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="/app.js"></script>
+</body></html>

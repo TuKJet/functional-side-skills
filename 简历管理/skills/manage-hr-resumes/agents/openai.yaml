@@ -1,0 +1,4 @@
+interface:
+  display_name: HR 简历管理
+  short_description: 维护简历池、JD、审核证据、二面评价和 Excel 台账
+  default_prompt: 使用 HR 简历管理 Skill，先读取 workspace.local.json 并运行 doctor，再按 JD 逐项审核并保留证据；不要重复询问已配置的目录和姓名。

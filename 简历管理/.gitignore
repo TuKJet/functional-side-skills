@@ -1,0 +1,11 @@
+# Runtime data, local installs and native builds
+/data/
+/demo-data/
+/runtime/
+/.runtime/
+/desktop/target/
+/desktop/*.exe
+/招聘看板.exe
+*.tmp
+**/workspace.local.json
+**/.update/

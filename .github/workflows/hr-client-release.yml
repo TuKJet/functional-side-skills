@@ -1,0 +1,195 @@
+name: HR client build and release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '简历管理/**'
+      - '.github/workflows/hr-client-release.yml'
+  pull_request:
+    paths:
+      - '简历管理/**'
+      - '.github/workflows/hr-client-release.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: hr-client-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PROJECT: 简历管理
+  PYTHONUTF8: '1'
+
+jobs:
+  windows:
+    name: Windows x64 client
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: 简历管理
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Run Rust and web checks
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo fmt --check --manifest-path desktop/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked --manifest-path desktop/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --check desktop/web/app.js
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node desktop/web/tests.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install --disable-pip-version-check -r skills/manage-hr-resumes/requirements.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\wheelhouse" | Out-Null
+          python -m pip download --only-binary=:all: --dest "$env:RUNNER_TEMP\wheelhouse" -r skills/manage-hr-resumes/requirements.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build Windows client
+        shell: pwsh
+        run: |
+          cargo build --locked --release --manifest-path desktop/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run Windows HTTP integration checks
+        shell: pwsh
+        env:
+          HR_WEB_HTTP_TESTS: '1'
+          HR_TEST_EXE: desktop/target/release/hr-resume-viewer.exe
+        run: |
+          python -m unittest discover -s tests -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Package Windows client
+        shell: pwsh
+        run: |
+          $version = ((Get-Content desktop/Cargo.toml -Raw) -match '(?m)^version\s*=\s*"([^"]+)"$') | Out-Null; $version = $Matches[1]
+          $out = Join-Path $env:RUNNER_TEMP ("hr-resume-windows-$version")
+          .\scripts\package-windows.ps1 -OutputDirectory $out -Wheelhouse "$env:RUNNER_TEMP\wheelhouse" -Executable desktop\target\release\hr-resume-viewer.exe -SkipBuild
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $skill = Join-Path $env:RUNNER_TEMP 'hr-skill'
+          $local = Join-Path $env:RUNNER_TEMP 'hr-local'
+          & (Join-Path $out 'scripts\setup.ps1') -SkillTarget $skill -LocalRoot $local -Actor 'GitHub Actions' -Wheelhouse (Join-Path $out 'wheelhouse') -SkipSync
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & (Join-Path $skill '.venv\Scripts\python.exe') (Join-Path $skill 'scripts\hr.py') --root $local --actor 'GitHub Actions' doctor
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & (Join-Path $skill '.venv\Scripts\python.exe') (Join-Path $skill 'scripts\hr.py') --root $local --actor 'GitHub Actions' snapshot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item (Join-Path $out '招聘看板.exe') "$env:GITHUB_WORKSPACE\hr-resume-windows-x64.exe"
+          (Get-FileHash "$env:GITHUB_WORKSPACE\hr-resume-windows-x64.exe" -Algorithm SHA256).Hash.ToLower() + "  hr-resume-windows-x64.exe" | Out-File -Encoding ascii "$env:GITHUB_WORKSPACE\hr-resume-windows-x64.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hr-client-windows-x64
+          path: |
+            hr-resume-windows-x64.exe
+            hr-resume-windows-x64.sha256
+
+  macos:
+    name: macOS ${{ matrix.arch }} client
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+            target: aarch64-apple-darwin
+            runner: macos-15
+          - arch: x86_64
+            target: x86_64-apple-darwin
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '11.0'
+    defaults:
+      run:
+        working-directory: 简历管理
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Run Rust and web checks
+        run: |
+          set -euo pipefail
+          rustup target add "${{ matrix.target }}"
+          cargo fmt --check --manifest-path desktop/Cargo.toml
+          cargo test --locked --manifest-path desktop/Cargo.toml
+          node --check desktop/web/app.js
+          node desktop/web/tests.cjs
+          mkdir -p "$RUNNER_TEMP/wheelhouse"
+          python3 -m pip download --only-binary=:all: --dest "$RUNNER_TEMP/wheelhouse" -r skills/manage-hr-resumes/requirements.txt
+          python3 -m venv "$RUNNER_TEMP/hr-venv"
+          "$RUNNER_TEMP/hr-venv/bin/python" -m pip install --disable-pip-version-check -r skills/manage-hr-resumes/requirements.txt
+      - name: Package macOS client
+        run: |
+          set -euo pipefail
+          chmod +x scripts/package-macos.sh
+          scripts/package-macos.sh "${{ matrix.target }}" "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}" "$RUNNER_TEMP/wheelhouse"
+          python3 "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/scripts/setup_macos.py" --skill-target "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/hr-skill" --local-root "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/hr-local" --actor "GitHub Actions" --wheelhouse "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/wheelhouse" --config "$RUNNER_TEMP/hr-client-config.json" --skip-sync
+          "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/hr-skill/.venv/bin/python" "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/hr-skill/scripts/hr.py" --root "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/hr-local" --actor "GitHub Actions" doctor
+          "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/hr-skill/.venv/bin/python" "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/hr-skill/scripts/hr.py" --root "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/hr-local" --actor "GitHub Actions" snapshot
+          HR_WEB_HTTP_TESTS=1 HR_TEST_EXE="$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/招聘看板.app/Contents/MacOS/招聘看板" "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}/hr-skill/.venv/bin/python" -m unittest discover -s tests -v
+          cp "$RUNNER_TEMP/hr-resume-macos-${{ matrix.arch }}.dmg" "$GITHUB_WORKSPACE/hr-resume-macos-${{ matrix.arch }}.dmg"
+          shasum -a 256 "$GITHUB_WORKSPACE/hr-resume-macos-${{ matrix.arch }}.dmg" | sed 's#  .*/#  #' > "$GITHUB_WORKSPACE/hr-resume-macos-${{ matrix.arch }}.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hr-client-macos-${{ matrix.arch }}
+          path: |
+            hr-resume-macos-${{ matrix.arch }}.dmg
+            hr-resume-macos-${{ matrix.arch }}.sha256
+
+  release:
+    name: Publish client release
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hr-client-*
+          path: artifacts
+          merge-multiple: true
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' "$PROJECT/desktop/Cargo.toml" | head -n1)
+          tag="hr-client-v${version}-run${GITHUB_RUN_NUMBER}"
+          (cd artifacts && sha256sum --check *.sha256)
+          printf '%s\n' \
+            "HR 招聘工作台 ${version}" \
+            "" \
+            "Windows 直接下载单个 EXE；Mac 按 Apple / Intel 芯片下载 DMG。" \
+            "Agent 安装 Skill 时会自动下载并配置客户端，然后询问是否在桌面创建快捷方式。" \
+            "macOS 使用 ad-hoc 签名，没有 Developer ID 签名或公证；首次打开请按系统安全提示处理。" \
+            "" \
+            "安装说明：https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_SHA}/简历管理/README.md" \
+            "" \
+            "构建提交：${GITHUB_SHA}" > release-notes.md
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" \
+              --target "$GITHUB_SHA" \
+              --title "HR 招聘工作台 $version · 构建 $GITHUB_RUN_NUMBER" \
+              --notes-file release-notes.md \
+              --draft
+          fi
+          gh release upload "$tag" artifacts/* --clobber
+          gh release edit "$tag" --draft=false --latest --notes-file release-notes.md
