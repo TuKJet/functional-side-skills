@@ -191,9 +191,10 @@ def download(skill_root: Path, kind: str) -> dict:
             os.replace(temporary, target)
         finally:
             temporary.unlink(missing_ok=True)
-    updated = dict(config, client_release_tag=tag, client_platform=kind,
-                   client_path=str(target), client_sha256=actual)
     config_path = _config_path()
+    updated = dict(config, client_release_tag=tag, client_platform=kind,
+                   client_path=str(target), client_sha256=actual,
+                   config_path=str(config_path), port=0)
     if config_path.exists():
         backup = config_path.with_name(f"client-config.backup.{time.time_ns()}.json")
         shutil.copy2(config_path, backup)
@@ -236,20 +237,30 @@ def shortcut(executable: Path) -> dict:
     if not desktop.is_dir():
         raise ClientError("Windows 桌面目录不存在。")
     link = desktop / "招聘工作台.lnk"
+    def previous_client_path(path: Path) -> bool:
+        clients = _config_path().parent / "clients"
+        try:
+            return path.name == "hr-resume-windows-x64.exe" and clients in path.parents and VERSION_RE.fullmatch(path.parent.name) is not None
+        except OSError:
+            return False
     if link.exists():
-        existing = subprocess.run([powershell, "-NoProfile", "-NonInteractive", "-Command", "$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:HR_CLIENT_SHORTCUT_PATH);$s.TargetPath"], env=dict(env, HR_CLIENT_SHORTCUT_PATH=str(link)), capture_output=True, text=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-        if existing.returncode or Path(existing.stdout.strip()).resolve() != target:
+        existing = subprocess.run([powershell, "-NoProfile", "-NonInteractive", "-Command", "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false);$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:HR_CLIENT_SHORTCUT_PATH);$s.TargetPath"], env=dict(env, HR_CLIENT_SHORTCUT_PATH=str(link)), capture_output=True, text=True, encoding="utf-8", creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        old_target = Path(existing.stdout.strip()).resolve() if not existing.returncode and existing.stdout.strip() else None
+        if existing.returncode or (old_target != target and not (old_target and previous_client_path(old_target))):
             raise ClientError(f"桌面已有不同的招聘工作台快捷方式，拒绝覆盖：{link}")
     env = dict(env, HR_CLIENT_SHORTCUT_PATH=str(link))
-    script = "$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:HR_CLIENT_SHORTCUT_PATH);$s.TargetPath=$env:HR_CLIENT_SHORTCUT_TARGET;$s.WorkingDirectory=[IO.Path]::GetDirectoryName($env:HR_CLIENT_SHORTCUT_TARGET);$s.Save()"
+    script = "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false);$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:HR_CLIENT_SHORTCUT_PATH);$s.TargetPath=$env:HR_CLIENT_SHORTCUT_TARGET;$s.WorkingDirectory=[IO.Path]::GetDirectoryName($env:HR_CLIENT_SHORTCUT_TARGET);$s.Save()"
     result = subprocess.run([powershell, "-NoProfile", "-NonInteractive", "-Command", script], env=env,
-                            capture_output=True, text=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+                            capture_output=True, text=True, encoding="utf-8", creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     if result.returncode:
         raise ClientError("创建桌面快捷方式失败：" + (result.stderr.strip() or "未知错误"))
     return {"ok": True, "shortcut": str(link), "target": str(target)}
 
 
 def main(argv=None) -> int:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
     parser = argparse.ArgumentParser(description="HR 招聘客户端安全下载器")
     parser.add_argument("command", choices=["check", "download", "shortcut"])
     parser.add_argument("--skill-root", default=str(Path(__file__).resolve().parents[1]))

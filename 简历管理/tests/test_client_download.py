@@ -87,6 +87,13 @@ class ClientDownloadTests(unittest.TestCase):
         with patch.object(client.sys, 'platform', 'win32'), self.assertRaises(client.ClientError):
             client.shortcut(self.base / 'not-downloaded.exe')
 
+    def test_previous_hr_client_path_is_safe_shortcut_upgrade_candidate(self):
+        clients = self.base / 'appdata' / 'HRResume' / 'clients'
+        old = clients / 'hr-client-v0.2.0-run7' / 'hr-resume-windows-x64.exe'
+        self.assertTrue(client.VERSION_RE.fullmatch(old.parent.name))
+        self.assertEqual(old.name, 'hr-resume-windows-x64.exe')
+        self.assertNotEqual((self.base / 'other' / old.name).parent.name, old.parent.name)
+
 
 if __name__ == '__main__':
     unittest.main()

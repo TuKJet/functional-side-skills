@@ -27,13 +27,13 @@ class Response:
         return self.value
 
 
-def archive(path: str, body: bytes = b"# v2\n", include_requirements: bool = True, malicious: bool = False) -> bytes:
+def archive(path: str, body: bytes = b"# v2\n", include_requirements: bool = True, malicious: bool = False, requirements: str = "openpyxl>=3.1,<4\npypdf>=5,<7\n") -> bytes:
     output = io.BytesIO()
     with zipfile.ZipFile(output, "w") as z:
         prefix = f"functional-side-skills-{SHA}/简历管理/skills/manage-hr-resumes/"
         z.writestr(prefix + "SKILL.md", body if path == "SKILL.md" else b"---\nname: manage-hr-resumes\n---\n")
         if include_requirements:
-            z.writestr(prefix + "requirements.txt", "openpyxl>=3.1,<4\npypdf>=5,<7\n")
+            z.writestr(prefix + "requirements.txt", requirements)
         z.writestr(prefix + "scripts/hr.py", "print('ok')\n")
         z.writestr(prefix + "scripts/hr_update.py", "print('updated')\n")
         z.writestr(prefix + "skills-upstream.json", '{"schema":1,"provider":"github","repository":"TuKJet/functional-side-skills","path":"简历管理/skills/manage-hr-resumes","branch":"main"}\n')
@@ -133,6 +133,23 @@ class UpdaterTests(unittest.TestCase):
         self.assertEqual(failed.exception.code, "update_failed")
         self.assertEqual((self.root / "SKILL.md").read_bytes(), before)
 
+    def test_requirements_crlf_bom_matches_upstream_lf(self):
+        installed = b"\xef\xbb\xbfopenpyxl>=3.1,<4\r\npypdf>=5,<7\r\n"
+        (self.root / "requirements.txt").write_bytes(installed)
+        self.assertEqual(hr_update._requirements_content(self.root / "requirements.txt"), "openpyxl>=3.1,<4\npypdf>=5,<7\n")
+        state_path = self.root / ".update" / "manifest.json"
+        state_path.write_text(json.dumps(hr_update._manifest(self.root), ensure_ascii=False), encoding="utf-8")
+        with patch.object(hr_update, "_urlopen", self.fake):
+            result = hr_update.command_update(self.root)
+        self.assertTrue(result["updated"])
+
+    def test_requirements_version_change_is_rejected(self):
+        def changed(url):
+            return Response(json.dumps([{"sha": SHA}]).encode()) if "api.github.com" in url else Response(archive("scripts/hr.py", requirements="openpyxl>=3.2,<4\npypdf>=5,<7\n"))
+        with patch.object(hr_update, "_urlopen", changed), self.assertRaises(hr_update.UpdateError) as failed:
+            hr_update.command_update(self.root)
+        self.assertEqual(failed.exception.code, "dependency_change")
+
     def test_pending_transaction_recovers_missing_manifest_and_rejects_extra_backup(self):
         with patch.object(hr_update, "_urlopen", self.fake):
             result = hr_update.command_update(self.root)
@@ -174,9 +191,9 @@ class UpdaterTests(unittest.TestCase):
         (self.root / ".update" / "manifest.json").unlink()
         completed = subprocess.run(
             [sys.executable, str(backup / "scripts" / "hr_update.py"), "rollback", "--skill-root", str(self.root), "--backup", str(backup)],
-            capture_output=True, text=True, check=False,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", check=False,
         )
-        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        self.assertEqual(completed.returncode, 0, (completed.stdout or "") + (completed.stderr or ""))
         self.assertTrue((self.root / "scripts" / "hr_update.py").exists())
         self.assertTrue((self.root / ".update" / "manifest.json").exists())
 

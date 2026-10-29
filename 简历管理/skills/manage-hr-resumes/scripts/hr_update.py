@@ -60,6 +60,14 @@ def _digest(path: Path) -> str:
     return h.hexdigest()
 
 
+def _requirements_content(path: Path) -> str:
+    """Normalize transport-only UTF-8 BOM and newline differences."""
+    data = path.read_bytes()
+    if data.startswith(b"\xef\xbb\xbf"):
+        data = data[3:]
+    return data.replace(b"\r\n", b"\n").replace(b"\r", b"\n").decode("utf-8")
+
+
 def _files(root: Path) -> list[str]:
     result: list[str] = []
     for name in MANAGED:
@@ -234,7 +242,8 @@ def _validate(stage: Path, root: Path) -> None:
             raise UpdateError("invalid_download", f"新 Python 语法校验失败：{path.name}", detail=str(exc)) from exc
     old_req = root / "requirements.txt"
     new_req = stage / "requirements.txt"
-    if not new_req.exists() or not old_req.exists() or old_req.read_bytes() != new_req.read_bytes():
+    if (not new_req.exists() or not old_req.exists()
+            or _requirements_content(old_req) != _requirements_content(new_req)):
         raise UpdateError("dependency_change", "上游 requirements 发生变化，请安装新版本 Skill 后再使用更新。", changed_files=["requirements.txt"])
 
 
@@ -426,6 +435,9 @@ def command_refresh_package(root: Path) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["init-state", "check", "update", "rollback", "refresh-package"])
     parser.add_argument("--skill-root", default=str(Path(__file__).resolve().parents[1]))
